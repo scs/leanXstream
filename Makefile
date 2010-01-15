@@ -58,7 +58,7 @@ LIBS_target := $(LIBS_target).a
 
 BINARIES := $(addsuffix _host, $(PRODUCTS)) $(addsuffix _target, $(PRODUCTS))
 
-.PHONY: all clean host target install deploy run reconfigure
+.PHONY: all clean host target deploy run reconfigure
 all: $(BINARIES)
 host target: %: $(addsuffix _%, $(PRODUCTS))
 
@@ -67,11 +67,6 @@ deploy: $(APP_NAME).app
 
 run:
 	ssh root@$(CONFIG_TARGET_IP) /mnt/app/$(APP_NAME).app/run.sh || true
-
-install: cgi/cgi_host
-	cp -RL cgi/www/* /var/www
-	cp $< /var/www/cgi-bin/cgi
-	chmod -Rf a+rX /var/www/ || true
 
 reconfigure:
 ifeq '$(CONFIG_PRIVATE_FRAMEWORK)' 'n'
@@ -107,8 +102,7 @@ $(foreach i, $(PRODUCTS), $(eval $(call LINK,$i)))
 .PHONY: $(APP_NAME).app
 $(APP_NAME).app: $(addsuffix _target, $(PRODUCTS))
 	rm -rf $@
-	cp -rL app $@
-	tar c -h -C cgi/www . | gzip > $@/www.tar.gz
+	cp -rL $< $@
 
 # Controlling the gdbserver on target
 .PHONY : gdbserver-start
