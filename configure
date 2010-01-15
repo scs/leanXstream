@@ -1,51 +1,27 @@
 #! /bin/bash
-# Script to generate the configuration '.config' file for the framework
+# Script to generate the configuration '.config' file for the framework.
 # Copyright (C) 2008 Supercomputing Systems AG
 # 
-# This library is free software; you can redistribute it and/or modify it under
-# the terms of the GNU Lesser General Public License as published by the Free
-# Software Foundation; either version 2.1 of the License, or (at your option)
-# any later version.
-# 
-# This library is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
-# details.
-# 
-# You should have received a copy of the GNU Lesser General Public License along
-# with this library; if not, write to the Free Software Foundation, Inc., 51
-# Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty. This file is offered as-is,
+# without any warranty.
 
+set -e -o pipefail
 
-trim() {
-	# trim $1: cut of leading and trailing white space
-	# $1: the string to trim
-	
-	echo "$1" | grep -oE "[^ \t\n].*[^ \t\n]"
-}
+print() { echo "$1" >&2; }
+inform() { print "$0: $1"; }
+warn() { print "Warning: $1"; }
+error() { inform "Error: $1"; }
+fail() { error "$1"; exit 1; }
+status() { echo -n "$1" >&2; }
 
 get_config() {
 	# get_config $1 $2: load a configuration from a configuration file
 	# $1: the name of the configuration file
-	# $2: name of the configuration
+	# $2: name of the configuration variable
 	
-	if [ -e "$1" ]; then
-		trim "$(grep -E "^$2" < $1 | cut -d "=" -f 2)"
-	fi
-}
-
-read_config() {
-	# read_config $1: read settings from a configuration file
-	# $1: name of the configuration file
-	
-	local NAME, VALUE
-	
-	cat "$1" | while read i; do
-		NAME=$(trim $(echo $i | cut -d "=" -f 1))
-		VALUE=$(trim $(echo $i | cut -d "=" -f 2))
-		
-		eval $NAME="$VALUE"
-	done
+	local CONFIG_FILE=$1 NAME=$2 EXPR="s/^#?$NAME[\t ]*=[\t ]*(.*)[\t ]*$/\1/p"
+	[ -e "$CONFIG_FILE" ] && sed -rn "$EXPR" < "$CONFIG_FILE" | head -n 1 || true
 }
 
 ask() {
@@ -53,42 +29,88 @@ ask() {
 	# $1: the default value
 	# $2: the prompt
 	
-	local REPLY
-	
-	read -e -p "$2 [$1]: "
-	[ "$REPLY" ] && echo "$REPLY" || echo "$1"
+	read -e -p "$2 [$1]: " 
+	[ "$REPLY" ] && echo $REPLY || echo $1
 }
 
-# global parameters
-CONFIG_FILE=".config"
-CONFIG_NAMES=(CONFIG_FRAMEWORK CONFIG_TARGET_IP)
-CONFIG_PROMPTS=("Enter the path to the framework you want to use", "Enter the IP address of the target device")
-CONFIG_VALUES=("../../oscar" "")
-
-# load the configurations
-for i in ${!CONFIG_NAMES[*]}; do
-	NAME=${CONFIG_NAMES[$i]}
-	VALUE=$(get_config "$CONFIG_FILE" "$NAME")
-
-	[ "$VALUE" ] && CONFIG_VALUES[$i]=$VALUE
-done
-
-# ask the user about configurations
-for i in ${!CONFIG_NAMES[*]}; do
-	PROMPT=${CONFIG_PROMPTS[$i]}
-	VALUE=${CONFIG_VALUES[$i]}
+variable_read() {
+	# variable_read $1: read the value of the variable with the given name
+	# $1: the name of the variable
 	
-	CONFIG_VALUES[$i]=$(ask "$VALUE" "$PROMPT")
-done
+	eval echo \"\$"$1"\"
+}
 
-# write the configuration file
-rm -f "${CONFIG_FILE}_new"
-for i in ${!CONFIG_NAMES[*]}; do
-	NAME=${CONFIG_NAMES[$i]}
-	VALUE=${CONFIG_VALUES[$i]}
+variable_write() {
+	# variable_write $1 $2: write a value to the variable with the given name
+	# $1: the name of the variable
+	# $2: the value to write
 	
-	echo "$NAME = $VALUE" >> "${CONFIG_FILE}_new"
-done
-mv -f "${CONFIG_FILE}_new" "${CONFIG_FILE}"
+	eval "$1"='$2'
+}
 
-exit 0
+SCRIPT_DIR=$(dirname "$BASH_SOURCE")
+CONF_FILE=$(readlink -f "$SCRIPT_DIR/.config")
+
+. "$SCRIPT_DIR/configure.in"
+
+# Read the configurations set on the command line.
+while [ "$1" ]; do
+	echo "$1" | grep -qF "=" || "Unknown option: $$1"
+	
+	NAME=$(echo "$1" | cut -d "=" -f 1)
+	VALUE=$(echo "$1" | cut -d "=" -f 2)
+	
+	echo "$NAME" | grep -xqF "$(echo "$CONFIGS" | tr ' ' '\n' | sed -r 's/^/CONFIG_/')" || fail "Unknown variable: $$NAME"
+	variable_write "$NAME" "$VALUE"
+	
+	shift
+done
+
+# Ask the user about configurations.
+for i_name in $CONFIGS; do
+	NAME="CONFIG_$i_name"
+	
+	{
+		VALUE_CLI=$(variable_read "$NAME")
+		VALUE_FILE=$(get_config "$CONF_FILE" "$NAME")
+		VALUE_DEFAULT=$("$NAME" default)
+	} > /dev/null
+	
+	# Check if we should ask for the configuration.
+	if "$NAME" enabled; then
+		# Check if the configuration value has been given on the command line.
+		if [ "$VALUE_CLI" ]; then
+			VALUE_NEW=$VALUE_CLI
+		else
+			[ "$VALUE_FILE" ] && VALUE=$VALUE_FILE || VALUE=$VALUE_DEFAULT
+			PROMPT=$("$NAME" prompt)
+			
+			while true; do
+				VALUE_NEW=$(ask "$VALUE" "$PROMPT")
+				
+				echo "$VALUE_NEW" | "$NAME" check && break
+				print "The configuration is not valid: $VALUE_NEW"
+			done
+			
+		fi > /dev/null
+		
+		variable_write "$NAME" "$VALUE_NEW" > /dev/null
+		echo "$NAME = $VALUE_NEW"
+	else
+		if [ "$VALUE_CLI" ]; then
+			VALUE_NEW=$VALUE_CLI
+		elif [ "$VALUE_FILE" ]; then
+			VALUE_NEW=$VALUE_FILE
+		else
+			VALUE_NEW=
+		fi > /dev/null
+		
+		[ "$VALUE_NEW" ] && echo "#$NAME = $VALUE_NEW"
+	fi
+done > "${CONF_FILE}~"
+
+# Move the new configuration file in place.
+mv -f "${CONF_FILE}~" "${CONF_FILE}"
+
+# Call the makefile to update according to the new configuration.
+make -C "$SCRIPT_DIR" --no-print-directory reconfigure
