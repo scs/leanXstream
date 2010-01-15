@@ -9,8 +9,6 @@
 
 int main(const int argc, const char * argv[])
 {
-	void *hFramework;
-	
 	static uint8 colorPic[3 * OSC_CAM_MAX_IMAGE_WIDTH * OSC_CAM_MAX_IMAGE_HEIGHT];
 	
 	struct OSC_PICTURE pic;
@@ -19,9 +17,7 @@ int main(const int argc, const char * argv[])
 	int retval;
 	char filename[100];
 	
-	OscCreate(&hFramework);
-
-	OscBmpCreate(hFramework);
+	OscCreate(&OscModule_bmp);
 	
 	/* setup Picture to write to file */
 	pic.width = OSC_CAM_MAX_IMAGE_WIDTH;
@@ -38,11 +34,8 @@ int main(const int argc, const char * argv[])
 		}
 	}
 	
-	/* Destroy modules */
-	OscBmpDestroy(hFramework);
-	
 	/* Destroy framework */
-	OscDestroy(hFramework);
+	OscDestroy();
 	
 	return 0;
 }

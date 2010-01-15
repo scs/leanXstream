@@ -32,19 +32,8 @@
 #define CAM_REG_CHIP_CONTROL 0x07
 
 
-/*! @brief The framework module dependencies of this application. */
-struct OSC_DEPENDENCY deps[] = {
-	{ "log", OscLogCreate, OscLogDestroy },
-	{ "bmp", OscBmpCreate, OscBmpDestroy },
-	{ "cam", OscCamCreate, OscCamDestroy },
-	{ "vis", OscVisCreate, OscVisDestroy },
-	{ "gpio", OscGpioCreate, OscGpioDestroy },
-	{ "jpg", OscJpgCreate, OscJpgDestroy }
-};
-
 /*! @brief The system state and buffers of this application. */
 struct SYSTEM {
-	void *hFramework;
 	void *hFileNameReader;
 
 	int32 shutterWidth; /* Microseconds */
@@ -61,17 +50,20 @@ struct SYSTEM {
  *//*********************************************************************/
 void initSystem(struct SYSTEM *s)
 {
-	OscCreate(&s->hFramework);
-	
-	/******* Load the framework module dependencies. **********/
-	OscLoadDependencies(s->hFramework, deps, sizeof(deps)/sizeof(struct OSC_DEPENDENCY));
+  /******* Create the framework **********/
+  OscCreate(	&OscModule_log,
+		&OscModule_bmp,
+		&OscModule_cam,
+		&OscModule_vis,
+		&OscModule_gpio,
+		&OscModule_jpg,
+		&OscModule_frd);
 
 	OscLogSetConsoleLogLevel(WARN);
 	OscLogSetFileLogLevel(WARN);
 	
 	#if defined(OSC_HOST)
 		/* Setup file name reader (for host compiled version); read constant image */
-		OscFrdCreate(s->hFramework);
 		OscFrdCreateConstantReader(&s->hFileNameReader, "imgCapture.bmp");
 		OscCamSetFileNameReader(s->hFileNameReader);
 	#endif
@@ -106,14 +98,8 @@ void initSystem(struct SYSTEM *s)
  *//*********************************************************************/
 void cleanupSystem(struct SYSTEM *s)
 {
-	/* Destroy modules */
-	#if defined(OSC_HOST)
-		OscFrdDestroy(s->hFramework);
-	#endif
-
-	OscUnloadDependencies(s->hFramework, deps, sizeof(deps)/sizeof(struct OSC_DEPENDENCY));
 	/* Destroy framework */
-	OscDestroy(s->hFramework);
+	OscDestroy();
 } /* cleanupSysteim */
 
 /*********************************************************************//*!
