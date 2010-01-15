@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/select.h>
-#include "inc/oscar.h"
+#include "oscar.h"
 #include "leanXtools.h"
 #include "leanXip.h"
 

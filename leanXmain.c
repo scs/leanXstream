@@ -18,7 +18,7 @@
 */
 
 
-#include "inc/oscar.h"
+#include "oscar.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
