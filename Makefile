@@ -19,14 +19,14 @@ $(error Please configure the application using './configure' prior to compilatio
 endif
 
 # Name for the application to produce.
-APP_NAME := template
+APP_NAME := leanXstream
 
 # Binary executables to generate.
-PRODUCTS := app cgi/cgi
+PRODUCTS := app writebmps/writebmps
 
 # Listings of source files for the different executables.
 SOURCES_app := $(wildcard *.c)
-SOURCES_cgi/cgi := $(wildcard cgi/*.c)
+SOURCES_writebmps/writebmps := $(wildcard writebmps/*.c)
 
 ifeq '$(CONFIG_ENABLE_DEBUG)' 'y'
 CC_host := gcc $(CFLAGS) -DOSC_HOST -g
@@ -41,10 +41,6 @@ CC_target += -DOSC_SIM
 endif
 LD_host := gcc -fPIC
 LD_target := bfin-uclinux-gcc -elf2flt="-s 1048576"
-
-# Listings of source files for the different applications.
-SOURCES_$(APP_NAME) := $(wildcard *.c)
-SOURCES_cgi/template.cgi := $(wildcard cgi/*.c)
 
 APPS := $(patsubst SOURCES_%, %, $(filter SOURCES_%, $(.VARIABLES)))
 
