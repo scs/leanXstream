@@ -22,9 +22,6 @@
 #ifndef H_LEANXTOOLS
 #define H_LEANXTOOLS
 
-#define min(x1,x2) ((x1) > (x2))? (x2):(x1)
-#define max(x1,x2) ((x1) > (x2))? (x1):(x2)
-
 struct list {
 	struct list *next; /* Has to be on top of the structures */
 };
