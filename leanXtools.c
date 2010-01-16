@@ -158,13 +158,13 @@ void ring_test() {
 		retval=ring_peek(&buf, str, 2);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 
 		printf("\npeek(4)\n"); 
 		retval=ring_peek(&buf, str, 4);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 
 		printf("\nwrite(\"4567890\")\n"); 
 		retval=ring_write(&buf, "4567890", 7);
@@ -178,34 +178,34 @@ void ring_test() {
 		retval=ring_peek(&buf, str, 20);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 
 		printf("\nread(5)\n"); 
 		retval=ring_read(&buf, str, 5);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 
 		printf("\nread(2)\n"); 
 		retval=ring_read(&buf, str, 2);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 
 		printf("\nread(2)\n"); 
 		retval=ring_read(&buf, str, 2);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 		
 		printf("\nread(1)\n"); 
 		retval=ring_read(&buf, str, 1);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 
 		printf("\nwrite(\"abcdefg\")\n"); 
@@ -216,7 +216,7 @@ void ring_test() {
 		retval=ring_read(&buf, str, 3);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 
 		printf("\nwrite(\"hijklmn\")\n"); 
@@ -227,7 +227,7 @@ void ring_test() {
 		retval=ring_read(&buf, str, 12);
 		printf("retval was %i\n", retval);
 		str[retval]=0;
-		printf(str);printf("\n");	
+		puts(str);printf("\n");	
 		ring_debug(&buf);
 	}
 }

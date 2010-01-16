@@ -178,7 +178,7 @@ void ip_read(int client)
 	}
 	if (err>0) {
 		dummy[err]=0;
-		printf(dummy);
+		puts(dummy);
 	}
 }
 
