@@ -102,7 +102,7 @@ $(foreach i, $(PRODUCTS), $(eval $(call LINK,$i)))
 .PHONY: $(APP_NAME).app
 $(APP_NAME).app: $(addsuffix _target, $(PRODUCTS))
 	rm -rf $@
-	cp -rL $< $@
+	cp -rL app $@
 
 # Controlling the gdbserver on target
 .PHONY : gdbserver-start

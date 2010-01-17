@@ -11,7 +11,6 @@ killall app 2> /dev/null
 # Copy the web interface to the http server's root directory.
 echo "Setting up the web interface ..."
 rm -rf /home/httpd/*
-gzip -d < www.tar.gz | tar -x -C /home/httpd/
 
 # Run the application
 echo "Running the application..."
