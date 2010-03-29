@@ -8,9 +8,11 @@ cd "`dirname "$P"`" || exit $?
 echo "Killing other instances of the application ..."
 killall app 2> /dev/null
 
-# Copy the web interface to the http server's root directory.
+# Deploy the "web interface"
 echo "Setting up the web interface ..."
-rm -rf /home/httpd/*
+cp index.html /home/httpd/
+mkdir -p /home/httpd/imgs
+cp leanXzebra.jpg /home/httpd/imgs/
 
 # Run the application
 echo "Running the application..."
