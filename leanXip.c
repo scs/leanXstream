@@ -203,7 +203,7 @@ void fix_readpointer() {
 		rptr = clients[i].r_ptr;
 		if (rptr > wbuf.w_ptr)
 			rptr -= wbuf.size;
-		minptr = min(minptr, rptr);
+		minptr = minptr < rptr ? minptr : rptr;
 	}
 
 	if (minptr < wbuf.data)

@@ -33,6 +33,10 @@ struct listtest {
 	int i;
 };
 
+#ifndef min
+#define min(x, y) x > y ? y : x
+#endif /* min */
+
 int ring_datalen(struct ringbuf *buf) 
 {
 	int full;
